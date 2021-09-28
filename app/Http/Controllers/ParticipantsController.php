@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use TCG\Voyager\Database\Schema\SchemaManager;
 use TCG\Voyager\Events\BreadDataAdded;
@@ -79,6 +80,9 @@ class ParticipantsController extends \TCG\Voyager\Http\Controllers\VoyagerBaseCo
             $model = app($dataType->model_name);
 
             $query = $model::select($dataType->name . '.*');
+
+            // Show Participants based on training id
+            $query = $query->where('training_id', request()->id);
 
             if ($dataType->scope && $dataType->scope != '' && method_exists($model, 'scope' . ucfirst($dataType->scope))) {
                 $query->{$dataType->scope}();
@@ -384,7 +388,7 @@ class ParticipantsController extends \TCG\Voyager\Http\Controllers\VoyagerBaseCo
         event(new BreadDataUpdated($dataType, $data));
 
         if (auth()->user()->can('browse', app($dataType->model_name))) {
-            $redirect = redirect(url(route("voyager.{$dataType->slug}.index").'?id='.request()->training_id));
+            $redirect = redirect(url(route("voyager.{$dataType->slug}.index") . '?id=' . request()->training_id));
         } else {
             $redirect = redirect()->back();
         }
@@ -492,9 +496,23 @@ class ParticipantsController extends \TCG\Voyager\Http\Controllers\VoyagerBaseCo
 
     public function postImportForm()
     {
-        Excel::import(new ParticipantsImport(request()->training_id), request()->file('import'));
+        $validator = Validator::make(request()->all(), [
+            'import' => 'required|mimes:xlsx, csv, xls'
+        ], [
+            'required' => 'The :attribute field is required.',
+            'mimes' => 'Format file tidak sesuai! Pastikan format file .xlsx|.csv|.xls'
+        ]);
 
-        return redirect(url(route('voyager.peserta.index').'?id='.request()->training_id));
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator);
+        }
+
+        $file = request()->file('import')->store('import');
+        
+        $import = new ParticipantsImport(request()->training_id);
+        $import->import($file);
+
+        return redirect(url(route('voyager.peserta.index') . '?id=' . request()->training_id));
     }
 
     //***************************************
@@ -530,7 +548,7 @@ class ParticipantsController extends \TCG\Voyager\Http\Controllers\VoyagerBaseCo
 
         //Get Training ID for redirection
         $participant = Participant::select('training_id')->where('id', (int)$ids[0])->first();
-        
+
         foreach ($ids as $id) {
             $data = call_user_func([$dataType->model_name, 'findOrFail'], $id);
 
@@ -560,7 +578,7 @@ class ParticipantsController extends \TCG\Voyager\Http\Controllers\VoyagerBaseCo
             event(new BreadDataDeleted($dataType, $data));
         }
 
-        return redirect(url( route("voyager.{$dataType->slug}.index") . '?id=' . $participant->training_id))->with($data);
+        return redirect(url(route("voyager.{$dataType->slug}.index") . '?id=' . $participant->training_id))->with($data);
     }
 
     public function restore(Request $request, $id)

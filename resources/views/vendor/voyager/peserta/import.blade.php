@@ -20,6 +20,15 @@
         <div class="col-md-12">
 
             <div class="panel panel-bordered">
+                @if (isset($errors) && $errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
                 <!-- form start -->
                 <form class="form-edit-add" action="{{ route('voyager.peserta.post-import') }}" method="POST" enctype="multipart/form-data">
                     <!-- PUT Method if we are editing -->
@@ -38,6 +47,7 @@
                             <input type="file" name="import">
 
                         </div>
+
                         <!-- GET THE DISPLAY OPTIONS -->
                         <input type="text" name="training_id" value="{{ request()->id }}" hidden="">
                     </div><!-- panel-body -->
@@ -56,7 +66,7 @@
 
 @section('javascript')
 <script>
-    $('document').ready(function () {
+    $('document').ready(function() {
         $(".breadcrumb li:eq(1)").remove()
         $(".breadcrumb li:eq(1) a").attr("href", "{{ route('voyager.peserta.index') . '?id=' . request()->id }}")
     })

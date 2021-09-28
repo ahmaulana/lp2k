@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ParticipantsController;
+use App\Http\Controllers\SearchCertificateController;
 use App\Participant;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::post('/search/certificate', [SearchCertificateController::class, 'search']);
 
 
 Route::group(['prefix' => 'admin'], function () {
