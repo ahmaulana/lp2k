@@ -512,7 +512,10 @@ class ParticipantsController extends \TCG\Voyager\Http\Controllers\VoyagerBaseCo
         $import = new ParticipantsImport(request()->training_id);
         $import->import($file);
 
-        return redirect(url(route('voyager.peserta.index') . '?id=' . request()->training_id));
+        return redirect(url(route('voyager.peserta.index') . '?id=' . request()->training_id))->with([
+            'message'    => 'Data berhasil ditambahkan!',
+            'alert-type' => 'success',
+        ]);;
     }
 
     //***************************************

@@ -4,8 +4,9 @@
 
 @section('page_header')
     <div class="container-fluid">
+        <a href=""></a>
         <h1 class="page-title">
-            <i class="{{ $dataType->icon }}"></i> {{ $dataType->getTranslatedAttribute('display_name_plural') . ' Pelatihan-' . request()->id }}
+            <i class="{{ $dataType->icon }}"></i> {{ $dataType->getTranslatedAttribute('display_name_plural') . ': '}} <a href="{{ route('voyager.pelatihan.index') }}">{{ App\Training::select("nama_pelatihan")->where("id", request()->id)->first()->nama_pelatihan }}</a>
         </h1>
         @can('add', app($dataType->model_name))
             <a href="{{ route('voyager.'.$dataType->slug.'.create').'?id='.request()->id }}" class="btn btn-success btn-add-new">

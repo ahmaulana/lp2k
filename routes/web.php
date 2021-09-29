@@ -21,6 +21,7 @@ Route::get('/', function () {
 });
 
 Route::post('/search/certificate', [SearchCertificateController::class, 'search']);
+Route::post('/detail/certificate', [SearchCertificateController::class, 'detail']);
 
 
 Route::group(['prefix' => 'admin'], function () {

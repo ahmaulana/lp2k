@@ -3,6 +3,8 @@
 namespace App\Imports;
 
 use App\Participant;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
@@ -14,6 +16,8 @@ use Throwable;
 class ParticipantsImport implements ToModel, WithHeadingRow, SkipsOnError, WithValidation
 {
     use Importable, SkipsErrors;
+    private $rows = 0;
+
     /**
      * @param array $row
      *
@@ -21,7 +25,7 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsOnError, WithV
      */
     public function __construct($id)
     {
-        $this->id = $id;
+        $this->id = (int)$id;
     }
 
     public function model(array $row)
@@ -33,7 +37,7 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsOnError, WithV
             'program_studi' => $row['program_studi'],
             'status' => $row['status'],
             'skor'  => $row['skor'],
-            'training_id' => (int)$this->id
+            'training_id' => $this->id
         ]);
     }
 
@@ -44,8 +48,13 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsOnError, WithV
             '*.nama_peserta' => ['required'],
             '*.perguruan_tinggi' => ['required'],
             '*.program_studi' => ['required'],
-            '*.status' => ['required','in:lulus,tidak lulus,LULUS,TIDAK LULUS'],
+            '*.status' => ['required', 'in:lulus,tidak lulus,LULUS,TIDAK LULUS'],
             '*.skor' => ['integer'],
+            '*.nidn' => function ($attribute, $value, $onFailure) {
+                if (Participant::where('nidn', $value)->where('training_id', $this->id)->exists()) {
+                    $onFailure('('. $attribute . ' NID/NIDN sudah terdaftar!)');
+                }
+            }
         ];
     }
 }
